@@ -19,6 +19,18 @@ For commercial licensing, please contact support@quantumnous.com
 import { type LinkProps } from '@tanstack/react-router'
 import { type TFunction } from 'i18next'
 
+export type NavIconColor =
+  | 'text-info'
+  | 'text-success'
+  | 'text-warning'
+  | 'text-destructive'
+  | 'text-neutral'
+  | 'text-chart-1'
+  | 'text-chart-2'
+  | 'text-chart-3'
+  | 'text-chart-4'
+  | 'text-chart-5'
+
 /**
  * Base navigation item type
  */
@@ -26,6 +38,7 @@ type BaseNavItem = {
   title: string
   badge?: string
   icon?: React.ElementType
+  iconColor?: NavIconColor
   activeUrls?: (LinkProps['to'] | (string & {}))[]
   configUrls?: (LinkProps['to'] | (string & {}))[]
 }
