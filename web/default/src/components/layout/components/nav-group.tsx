@@ -45,6 +45,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { getNavIconClassName } from '../lib/nav-icon'
 import { checkIsActive } from '../lib/url-utils'
 import {
   type NavCollapsible,
@@ -127,7 +128,9 @@ function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
         tooltip={item.title}
         render={<Link to={item.url} onClick={() => setOpenMobile(false)} />}
       >
-        {item.icon && <item.icon className='shrink-0' />}
+        {item.icon && (
+          <item.icon className={getNavIconClassName(item.iconColor)} />
+        )}
         <span className='min-w-0 flex-1 truncate'>{item.title}</span>
         {item.badge && <NavBadge>{item.badge}</NavBadge>}
       </SidebarMenuButton>
@@ -170,7 +173,9 @@ function SidebarMenuCollapsible({
         className='group/collapsible-trigger'
         render={<SidebarMenuButton tooltip={item.title} />}
       >
-        {item.icon && <item.icon className='shrink-0' />}
+        {item.icon && (
+          <item.icon className={getNavIconClassName(item.iconColor)} />
+        )}
         <span className='min-w-0 flex-1 truncate'>{item.title}</span>
         {item.badge && <NavBadge>{item.badge}</NavBadge>}
         <ChevronRight className='ms-auto size-4 shrink-0 transition-transform duration-200 group-data-[panel-open]/collapsible-trigger:rotate-90' />
@@ -185,7 +190,11 @@ function SidebarMenuCollapsible({
                   <Link to={subItem.url} onClick={() => setOpenMobile(false)} />
                 }
               >
-                {subItem.icon && <subItem.icon className='shrink-0' />}
+                {subItem.icon && (
+                  <subItem.icon
+                    className={getNavIconClassName(subItem.iconColor)}
+                  />
+                )}
                 <span className='min-w-0 flex-1 truncate'>{subItem.title}</span>
                 {subItem.badge && <NavBadge>{subItem.badge}</NavBadge>}
               </SidebarMenuSubButton>
@@ -219,7 +228,9 @@ function SidebarMenuCollapsedDropdown({
             />
           }
         >
-          {item.icon && <item.icon className='shrink-0' />}
+          {item.icon && (
+            <item.icon className={getNavIconClassName(item.iconColor)} />
+          )}
           <span className='min-w-0 flex-1 truncate'>{item.title}</span>
           {item.badge && <NavBadge>{item.badge}</NavBadge>}
           <ChevronRight className='ms-auto size-4 shrink-0 transition-transform duration-200 group-data-[popup-open]/dropdown-trigger:rotate-90' />
@@ -240,7 +251,9 @@ function SidebarMenuCollapsedDropdown({
                   />
                 }
               >
-                {sub.icon && <sub.icon />}
+                {sub.icon && (
+                  <sub.icon className={getNavIconClassName(sub.iconColor)} />
+                )}
                 <span className='max-w-52 text-wrap'>{sub.title}</span>
                 {sub.badge && (
                   <span className='ms-auto text-xs'>{sub.badge}</span>

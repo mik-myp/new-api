@@ -116,7 +116,7 @@ function MobileUserProfile({ user, onNavigate }: MobileUserProfileProps) {
           onClick={onNavigate}
           className='text-primary/60 hover:text-primary/80 border-border flex items-center gap-2.5 border-b p-2.5 transition-colors'
         >
-          <User className='size-4' />
+          <User className='size-4 text-chart-3' />
           {t('Profile')}
         </Link>
 
@@ -125,7 +125,7 @@ function MobileUserProfile({ user, onNavigate }: MobileUserProfileProps) {
           onClick={onNavigate}
           className='text-primary/60 hover:text-primary/80 border-border flex items-center gap-2.5 border-b p-2.5 transition-colors'
         >
-          <Wallet className='size-4' />
+          <Wallet className='size-4 text-success' />
           {t('Wallet')}
         </Link>
 
@@ -135,7 +135,7 @@ function MobileUserProfile({ user, onNavigate }: MobileUserProfileProps) {
           onClick={() => setSignOutOpen(true)}
           className='text-destructive hover:text-destructive/80 h-auto w-full justify-start gap-2.5 p-2.5 hover:bg-transparent'
         >
-          <LogOut className='size-4' />
+          <LogOut className='size-4 text-destructive' />
           {t('Sign out')}
         </Button>
       </div>
