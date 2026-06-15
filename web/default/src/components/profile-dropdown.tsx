@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { User, Wallet, LogOut, Settings } from 'lucide-react'
+import { CreditCard, User, Wallet, LogOut, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth-store'
 import { getUserAvatarFallback, getUserAvatarStyle } from '@/lib/avatar'
@@ -100,13 +100,20 @@ export function ProfileDropdown() {
           <DropdownMenuSeparator />
 
           <DropdownMenuItem onClick={() => navigate({ to: '/profile' })}>
-            <User className='size-4' />
+            <User className='size-4 text-indigo-500 dark:text-indigo-400' />
             {t('Profile')}
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={() => navigate({ to: '/wallet' })}>
-            <Wallet className='size-4' />
+            <Wallet className='size-4 text-green-500 dark:text-green-400' />
             {t('Wallet')}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => navigate({ to: '/subscription-plans' })}
+          >
+            <CreditCard className='size-4 text-rose-500 dark:text-rose-400' />
+            {t('Subscription Plans')}
           </DropdownMenuItem>
 
           {isSuperAdmin && (
@@ -118,7 +125,7 @@ export function ProfileDropdown() {
                 })
               }
             >
-              <Settings className='size-4' />
+              <Settings className='size-4 text-slate-500 dark:text-slate-300' />
               {t('System Settings')}
             </DropdownMenuItem>
           )}
