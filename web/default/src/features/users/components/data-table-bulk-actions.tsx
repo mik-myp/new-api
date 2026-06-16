@@ -16,18 +16,76 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { useState } from 'react'
 import { type Table } from '@tanstack/react-table'
+import { CircleDollarSign } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { DataTableBulkActions as BulkActionsToolbar } from '@/components/data-table'
 import { type User } from '../types'
+import { UserQuotaDialog } from './user-quota-dialog'
+import { useUsers } from './users-provider'
 
 interface DataTableBulkActionsProps {
   table: Table<User>
 }
 
 export function DataTableBulkActions({ table }: DataTableBulkActionsProps) {
+  const { t } = useTranslation()
+  const { triggerRefresh } = useUsers()
+  const [showQuotaDialog, setShowQuotaDialog] = useState(false)
+
+  const selectedIds = table
+    .getFilteredSelectedRowModel()
+    .rows.reduce<number[]>((ids, row) => {
+      const id = row.original.id
+      if (typeof id === 'number') {
+        ids.push(id)
+      }
+      return ids
+    }, [])
+
+  const handleSuccess = () => {
+    table.resetRowSelection()
+    triggerRefresh()
+  }
+
   return (
-    <BulkActionsToolbar table={table} entityName='user'>
-      <></>
-    </BulkActionsToolbar>
+    <>
+      <BulkActionsToolbar table={table} entityName='user'>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant='outline'
+                size='icon'
+                onClick={() => setShowQuotaDialog(true)}
+                className='size-8'
+                aria-label={t('Adjust selected users quota')}
+                title={t('Adjust selected users quota')}
+              />
+            }
+          >
+            <CircleDollarSign />
+            <span className='sr-only'>{t('Adjust selected users quota')}</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{t('Adjust selected users quota')}</p>
+          </TooltipContent>
+        </Tooltip>
+      </BulkActionsToolbar>
+
+      <UserQuotaDialog
+        open={showQuotaDialog}
+        onOpenChange={setShowQuotaDialog}
+        userIds={selectedIds}
+        onSuccess={handleSuccess}
+      />
+    </>
   )
 }
