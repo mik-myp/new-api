@@ -42,6 +42,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog } from '@/components/dialog'
 import { StatusBadge, type StatusBadgeProps } from '@/components/status-badge'
 import { DynamicPricingBreakdown } from '@/features/pricing/components/dynamic-pricing-breakdown'
+import { getRequestRuleMultiplierAt } from '@/features/pricing/lib/request-rule-match'
 import type { UsageLog } from '../../data/schema'
 import {
   parseLogOther,
@@ -142,6 +143,11 @@ function formatRatio(ratio: number | undefined): string {
   return ratio.toFixed(4)
 }
 
+function formatMultiplier(multiplier: number): string {
+  if (!Number.isFinite(multiplier)) return '-'
+  return `${multiplier.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}x`
+}
+
 function BillingBreakdown(props: {
   log: UsageLog
   other: LogOtherData
@@ -153,6 +159,13 @@ function BillingBreakdown(props: {
   const isClaude = other.claude === true
   const isTieredExpr = other.billing_mode === 'tiered_expr'
   const tieredSummary = getTieredBillingSummary(other)
+  const requestRuleMultiplier =
+    isTieredExpr && other.expr_b64
+      ? getRequestRuleMultiplierAt(
+          decodeBillingExprB64(other.expr_b64),
+          log.created_at
+        )
+      : null
 
   const rows: Array<{ label: string; value: string }> = []
   const priceOpts = { digitsLarge: 4, digitsSmall: 6, abbreviate: false }
@@ -175,6 +188,12 @@ function BillingBreakdown(props: {
         rows.push({
           label: t(entry.shortLabel),
           value: `${fmtPrice(entry.price)}/M`,
+        })
+      }
+      if (requestRuleMultiplier?.allTimeBased) {
+        rows.push({
+          label: t('Request Rule Multiplier'),
+          value: `${formatMultiplier(requestRuleMultiplier.multiplier)} (${requestRuleMultiplier.matchedCount}/${requestRuleMultiplier.totalCount} ${t('Matched')})`,
         })
       }
     } else {
@@ -558,11 +577,11 @@ export function DetailsDialog(props: DetailsDialogProps) {
       headerClassName='max-sm:gap-1'
       titleClassName='flex items-center gap-2 text-base'
       descriptionClassName='sr-only'
-      contentHeight='min(72vh, 720px)'
-      bodyClassName='space-y-4'
+      contentHeight='min(calc(100dvh - 7rem), 820px)'
+      bodyClassName='h-full min-h-0 space-y-4'
     >
-      <ScrollArea className='max-h-[70vh] min-w-0 overflow-hidden pr-2 max-sm:max-h-[calc(100dvh-7rem)] sm:pr-4'>
-        <div className='w-full max-w-full min-w-0 space-y-2.5 overflow-hidden py-1 sm:space-y-3'>
+      <ScrollArea className='h-full min-h-0 min-w-0 overflow-hidden pr-2 sm:pr-4'>
+        <div className='w-full max-w-full min-w-0 space-y-2.5 overflow-hidden py-1 pb-6 sm:space-y-3'>
           {/* Overview section - key identifiers */}
           <div className='min-w-0 space-y-1'>
             {props.log.request_id && (
@@ -977,6 +996,7 @@ export function DetailsDialog(props: DetailsDialogProps) {
                 billingExpr={decodeBillingExprB64(other.expr_b64)}
                 matchedTierLabel={other.matched_tier}
                 hideCacheColumns={!hasAnyCacheTokens(other)}
+                ruleMatchTimestamp={props.log.created_at}
               />
             </div>
           )}

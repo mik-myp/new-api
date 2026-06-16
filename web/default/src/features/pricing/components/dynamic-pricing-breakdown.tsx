@@ -41,6 +41,7 @@ import {
   type RequestRuleGroup,
   type TierCondition,
 } from '../lib/billing-expr'
+import { getRequestRuleGroupMatchesAt } from '../lib/request-rule-match'
 
 type DynamicPricingBreakdownProps = {
   billingExpr: string | null | undefined
@@ -57,6 +58,11 @@ type DynamicPricingBreakdownProps = {
    * call they are inspecting. Defaults to false (show all configured prices).
    */
   hideCacheColumns?: boolean
+  /**
+   * Usage-log creation time in seconds. When present, time-based request
+   * multiplier rows can be highlighted with the rules that matched the call.
+   */
+  ruleMatchTimestamp?: number | null
 }
 
 const VAR_LABELS: Record<string, string> = {
@@ -150,6 +156,7 @@ export function DynamicPricingBreakdown({
   billingExpr,
   matchedTierLabel,
   hideCacheColumns = false,
+  ruleMatchTimestamp,
 }: DynamicPricingBreakdownProps) {
   const { t } = useTranslation()
   const expr = billingExpr || ''
@@ -177,6 +184,13 @@ export function DynamicPricingBreakdown({
       ruleGroups: parsedRules || [],
     }
   }, [expr])
+
+  const ruleGroupMatches = useMemo(() => {
+    if (ruleMatchTimestamp == null || !Number.isFinite(ruleMatchTimestamp)) {
+      return null
+    }
+    return getRequestRuleGroupMatchesAt(expr, ruleMatchTimestamp)
+  }, [expr, ruleMatchTimestamp])
 
   const hasTiers = tiers.length > 0
   const hasRules = ruleGroups.length > 0
@@ -383,22 +397,40 @@ export function DynamicPricingBreakdown({
             {t('Conditional multipliers')}
           </div>
           <ul className='space-y-1.5'>
-            {ruleGroups.map((group, gi) => (
-              <li
-                key={`group-${gi}`}
-                className='bg-muted/50 flex items-center justify-between gap-3 rounded-md px-3 py-2'
-              >
-                <span className='text-foreground text-sm break-all'>
-                  {describeGroup(group, t)}
-                </span>
-                <Badge
-                  variant='secondary'
-                  className='shrink-0 bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300'
+            {ruleGroups.map((group, gi) => {
+              const groupMatch = ruleGroupMatches?.groups[gi]
+              const isMatched =
+                groupMatch?.allTimeBased === true && groupMatch.matched
+              return (
+                <li
+                  key={`group-${gi}`}
+                  className={cn(
+                    'bg-muted/50 flex items-center justify-between gap-3 rounded-md border border-transparent px-3 py-2',
+                    isMatched && 'border-emerald-500/40 bg-emerald-500/10'
+                  )}
                 >
-                  {group.multiplier}x
-                </Badge>
-              </li>
-            ))}
+                  <span className='text-foreground text-sm break-all'>
+                    {describeGroup(group, t)}
+                  </span>
+                  <span className='flex shrink-0 items-center gap-1.5'>
+                    {isMatched && (
+                      <Badge
+                        variant='secondary'
+                        className='bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+                      >
+                        {t('Matched')}
+                      </Badge>
+                    )}
+                    <Badge
+                      variant='secondary'
+                      className='bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300'
+                    >
+                      {group.multiplier}x
+                    </Badge>
+                  </span>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}
