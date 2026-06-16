@@ -116,13 +116,32 @@ export type ManageUserAction =
   | 'delete'
   | 'add_quota'
 
-export type QuotaAdjustMode = 'add' | 'subtract' | 'override'
+export type QuotaAdjustMode =
+  | 'add'
+  | 'subtract'
+  | 'override'
+  | 'multiply'
+  | 'divide'
 
 export interface ManageUserQuotaPayload {
   id: number
   action: 'add_quota'
   mode: QuotaAdjustMode
-  value: number
+  value?: number
+  factor?: number
+}
+
+export interface BatchUserQuotaPayload {
+  ids: number[]
+  mode: QuotaAdjustMode
+  value?: number
+  factor?: number
+}
+
+export interface BatchUserQuotaResult {
+  affected_count: number
+  skipped_count: number
+  skipped_ids: number[]
 }
 
 // ============================================================================

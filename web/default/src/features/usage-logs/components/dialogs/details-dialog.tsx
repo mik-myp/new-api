@@ -54,6 +54,7 @@ import {
   isViolationFeeLog,
   getFirstResponseTimeColor,
   getResponseTimeColor,
+  getLocalizedLogContent,
   renderAuditContent,
 } from '../../lib/format'
 import {
@@ -427,8 +428,13 @@ interface DetailsDialogProps {
 export function DetailsDialog(props: DetailsDialogProps) {
   const { t } = useTranslation()
   const { copiedText, copyToClipboard } = useCopyToClipboard({ notify: false })
-  const details = props.log.content ?? ''
   const other = parseLogOther(props.log.other)
+  const details = getLocalizedLogContent(
+    props.log.type,
+    props.log.content,
+    other,
+    t
+  )
   const typeConfig = getLogTypeConfig(props.log.type)
 
   const isViolation = isViolationFeeLog(other)
