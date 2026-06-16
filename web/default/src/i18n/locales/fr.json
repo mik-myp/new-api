@@ -3517,6 +3517,7 @@
     "Request Model:": "Modèle demandé :",
     "Request overrides, routing behavior, and upstream model automation": "Surcharges de requête, comportement de routage et automatisation des modèles amont",
     "Request retry": "Relance des requêtes",
+    "Request Rule Multiplier": "Multiplicateur de règle de requête",
     "Request rule pricing": "Règles de tarification de requête",
     "Request success rate sampled over the last 24 hours": "Taux de réussite des requêtes échantillonné sur les dernières 24 heures",
     "Request success rate; {{incidents}} incident buckets in the last 24 hours": "Taux de réussite des requêtes ; {{incidents}} créneaux avec incident sur les dernières 24 heures",

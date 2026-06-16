@@ -41,6 +41,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog } from '@/components/dialog'
 import { StatusBadge, type StatusBadgeProps } from '@/components/status-badge'
 import { DynamicPricingBreakdown } from '@/features/pricing/components/dynamic-pricing-breakdown'
+import { getRequestRuleMultiplierAt } from '@/features/pricing/lib/request-rule-match'
 import type { UsageLog } from '../../data/schema'
 import {
   parseLogOther,
@@ -141,6 +142,11 @@ function formatRatio(ratio: number | undefined): string {
   return ratio.toFixed(4)
 }
 
+function formatMultiplier(multiplier: number): string {
+  if (!Number.isFinite(multiplier)) return '-'
+  return `${multiplier.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}x`
+}
+
 function BillingBreakdown(props: {
   log: UsageLog
   other: LogOtherData
@@ -152,6 +158,13 @@ function BillingBreakdown(props: {
   const isClaude = other.claude === true
   const isTieredExpr = other.billing_mode === 'tiered_expr'
   const tieredSummary = getTieredBillingSummary(other)
+  const requestRuleMultiplier =
+    isTieredExpr && other.expr_b64
+      ? getRequestRuleMultiplierAt(
+          decodeBillingExprB64(other.expr_b64),
+          log.created_at
+        )
+      : null
 
   const rows: Array<{ label: string; value: string }> = []
   const priceOpts = { digitsLarge: 4, digitsSmall: 6, abbreviate: false }
@@ -174,6 +187,12 @@ function BillingBreakdown(props: {
         rows.push({
           label: t(entry.shortLabel),
           value: `${fmtPrice(entry.price)}/M`,
+        })
+      }
+      if (requestRuleMultiplier?.allTimeBased) {
+        rows.push({
+          label: t('Request Rule Multiplier'),
+          value: `${formatMultiplier(requestRuleMultiplier.multiplier)} (${requestRuleMultiplier.matchedCount}/${requestRuleMultiplier.totalCount} ${t('Matched')})`,
         })
       }
     } else {
@@ -969,6 +988,7 @@ export function DetailsDialog(props: DetailsDialogProps) {
               billingExpr={decodeBillingExprB64(other.expr_b64)}
               matchedTierLabel={other.matched_tier}
               hideCacheColumns={!hasAnyCacheTokens(other)}
+              ruleMatchTimestamp={props.log.created_at}
             />
           </div>
         )}
