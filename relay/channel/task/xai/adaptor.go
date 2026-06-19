@@ -96,7 +96,7 @@ func (a *TaskAdaptor) AdjustBillingOnSubmit(info *relaycommon.RelayInfo, taskDat
 }
 
 func (a *TaskAdaptor) BuildRequestURL(info *relaycommon.RelayInfo) (string, error) {
-	return fmt.Sprintf("%s/v1/video/generations", info.ChannelBaseUrl), nil
+	return fmt.Sprintf("%s/v1/videos", info.ChannelBaseUrl), nil
 }
 
 func (a *TaskAdaptor) BuildRequestHeader(c *gin.Context, req *http.Request, info *relaycommon.RelayInfo) error {
@@ -165,7 +165,7 @@ func (a *TaskAdaptor) FetchTask(baseUrl, key string, body map[string]any, proxy 
 		return nil, fmt.Errorf("invalid task_id")
 	}
 
-	uri := fmt.Sprintf("%s/v1/video/generations/%s", baseUrl, taskID)
+	uri := fmt.Sprintf("%s/v1/videos/%s", baseUrl, taskID)
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, err
