@@ -51,36 +51,43 @@ function getSystemSettingsNavGroups(t: TFunction): NavGroup[] {
         {
           title: t('Site & Branding'),
           icon: Settings,
+          iconColor: 'text-slate-500 dark:text-slate-300',
           items: getSiteSectionNavItems(t),
         },
         {
           title: t('Authentication'),
           icon: Shield,
+          iconColor: 'text-indigo-500 dark:text-indigo-400',
           items: getAuthSectionNavItems(t),
         },
         {
           title: t('Billing & Payment'),
           icon: CreditCard,
+          iconColor: 'text-emerald-500 dark:text-emerald-400',
           items: getBillingSectionNavItems(t),
         },
         {
           title: t('Models & Routing'),
           icon: Box,
+          iconColor: 'text-purple-500 dark:text-purple-400',
           items: getModelsSectionNavItems(t),
         },
         {
           title: t('Security & Limits'),
           icon: ShieldAlert,
+          iconColor: 'text-red-500 dark:text-red-400',
           items: getSecuritySectionNavItems(t),
         },
         {
           title: t('Console Content'),
           icon: Layout,
+          iconColor: 'text-cyan-500 dark:text-cyan-400',
           items: getContentSectionNavItems(t),
         },
         {
           title: t('Operations'),
           icon: Wrench,
+          iconColor: 'text-orange-500 dark:text-orange-400',
           items: getOperationsSectionNavItems(t),
         },
       ],
