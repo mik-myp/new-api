@@ -156,7 +156,7 @@ export function useSidebarData(): SidebarData {
             iconColor: 'text-yellow-500 dark:text-yellow-400',
           },
           {
-            title: t('Subscription Management'),
+            title: t('Subscriptions'),
             url: '/subscriptions',
             icon: CreditCard,
             iconColor: 'text-pink-500 dark:text-pink-400',
