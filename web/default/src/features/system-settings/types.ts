@@ -278,6 +278,7 @@ export type BillingSettings = {
   AutoGroups: string
   DefaultUseAutoGroup: boolean
   'group_ratio_setting.group_special_usable_group': string
+  'group_billing_policy_setting.group_billing_policy': string
   PayAddress: string
   EpayId: string
   EpayKey: string

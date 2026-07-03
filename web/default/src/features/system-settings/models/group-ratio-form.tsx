@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { Code2, Eye, HelpCircle } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
-import { type UseFormReturn } from 'react-hook-form'
+import type { UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -58,6 +58,7 @@ import {
   SettingsSwitchItem,
 } from '../components/settings-form-layout'
 import { SettingsPageActionsPortal } from '../components/settings-page-context'
+import { GroupBillingPolicyEditor } from './group-billing-policy-editor'
 import { GroupRatioVisualEditor } from './group-ratio-visual-editor'
 import { GroupSpecialUsableRulesEditor } from './group-special-usable-editor'
 
@@ -69,6 +70,7 @@ type GroupFormValues = {
   AutoGroups: string
   DefaultUseAutoGroup: boolean
   GroupSpecialUsableGroup: string
+  GroupBillingPolicy: string
 }
 
 type GroupRatioFormProps = {
@@ -152,6 +154,13 @@ export const GroupRatioForm = memo(function GroupRatioForm({
               value={form.watch('GroupSpecialUsableGroup')}
               onChange={(value) =>
                 handleFieldChange('GroupSpecialUsableGroup', value)
+              }
+            />
+
+            <GroupBillingPolicyEditor
+              value={form.watch('GroupBillingPolicy')}
+              onChange={(value) =>
+                handleFieldChange('GroupBillingPolicy', value)
               }
             />
 
@@ -290,6 +299,25 @@ export const GroupRatioForm = memo(function GroupRatioForm({
                   <FormDescription>
                     {t(
                       'Nested JSON defining per-group rules for adding (+:), removing (-:), or appending usable groups.'
+                    )}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='GroupBillingPolicy'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Group billing policy')}</FormLabel>
+                  <FormControl>
+                    <Textarea rows={8} {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    {t(
+                      'JSON map of group → allowed billing sources. Unconfigured groups allow both wallet and subscription.'
                     )}
                   </FormDescription>
                   <FormMessage />

@@ -256,6 +256,15 @@ func UpdateOptionsBulk(values map[string]string) error {
 func updateOptionMap(key string, value string) (err error) {
 	common.OptionMapRWMutex.Lock()
 	defer common.OptionMapRWMutex.Unlock()
+
+	if key == ratio_setting.GroupBillingPolicyOptionKey {
+		if err = ratio_setting.UpdateGroupBillingPolicyByJSONString(value); err != nil {
+			return err
+		}
+		common.OptionMap[key] = value
+		return nil
+	}
+
 	common.OptionMap[key] = value
 
 	// 检查是否是模型配置 - 使用更规范的方式处理
