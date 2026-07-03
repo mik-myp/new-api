@@ -49,6 +49,8 @@ const getGroupDefaults = (settings: BillingSettings) => ({
   DefaultUseAutoGroup: settings.DefaultUseAutoGroup,
   GroupSpecialUsableGroup:
     settings['group_ratio_setting.group_special_usable_group'],
+  GroupBillingPolicy:
+    settings['group_billing_policy_setting.group_billing_policy'],
 })
 
 const BILLING_SECTIONS = [

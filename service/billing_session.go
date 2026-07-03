@@ -10,6 +10,7 @@ import (
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
 	"github.com/QuantumNous/new-api/types"
 
 	"github.com/bytedance/gopkg/util/gopool"
@@ -345,6 +346,18 @@ func NewBillingSession(c *gin.Context, relayInfo *relaycommon.RelayInfo, preCons
 	}
 
 	pref := common.NormalizeBillingPreference(relayInfo.UserSetting.BillingPreference)
+	groupPolicy := newGroupBillingSourcePolicy(ratio_setting.GetGroupBillingSources(relayInfo.UsingGroup))
+	attemptOrder, policyErr := resolveGroupBillingAttemptOrder(pref, groupPolicy)
+	if policyErr != nil {
+		groupName := strings.TrimSpace(relayInfo.UsingGroup)
+		return nil, types.NewErrorWithStatusCode(
+			fmt.Errorf("%s", groupBillingPolicyMismatchMessage(groupName, pref, groupPolicy)),
+			types.ErrorCodeInvalidRequest,
+			http.StatusForbidden,
+			types.ErrOptionWithSkipRetry(),
+			types.ErrOptionWithNoRecordErrorLog(),
+		)
+	}
 
 	// 钱包路径需要先检查用户额度
 	tryWallet := func() (*BillingSession, *types.NewAPIError) {
@@ -398,33 +411,19 @@ func NewBillingSession(c *gin.Context, relayInfo *relaycommon.RelayInfo, preCons
 		return session, nil
 	}
 
-	switch pref {
-	case "subscription_only":
-		return trySubscription()
-	case "wallet_only":
-		return tryWallet()
-	case "wallet_first":
-		session, err := tryWallet()
-		if err != nil {
-			if err.GetErrorCode() == types.ErrorCodeInsufficientUserQuota {
-				return trySubscription()
+	if pref == "subscription_first" && groupPolicy.subscription {
+		if groupPolicy.wallet {
+			hasSub, subCheckErr := model.HasActiveUserSubscription(relayInfo.UserId)
+			if subCheckErr != nil {
+				return nil, types.NewError(subCheckErr, types.ErrorCodeQueryDataError, types.ErrOptionWithSkipRetry())
 			}
-			return nil, err
-		}
-		return session, nil
-	case "subscription_first":
-		fallthrough
-	default:
-		hasSub, subCheckErr := model.HasActiveUserSubscription(relayInfo.UserId)
-		if subCheckErr != nil {
-			return nil, types.NewError(subCheckErr, types.ErrorCodeQueryDataError, types.ErrOptionWithSkipRetry())
-		}
-		if !hasSub {
-			return tryWallet()
+			if !hasSub {
+				return tryWallet()
+			}
 		}
 		session, apiErr := trySubscription()
 		if apiErr != nil {
-			if apiErr.GetErrorCode() == types.ErrorCodeInsufficientUserQuota {
+			if apiErr.GetErrorCode() == types.ErrorCodeInsufficientUserQuota && groupPolicy.wallet {
 				// 仅当用户的活跃订阅允许钱包回退时才回退到钱包，否则返回订阅额度不足错误
 				allowOverflow, overflowErr := model.UserActiveSubscriptionsAllowWalletOverflow(relayInfo.UserId)
 				if overflowErr != nil {
@@ -439,4 +438,28 @@ func NewBillingSession(c *gin.Context, relayInfo *relaycommon.RelayInfo, preCons
 		}
 		return session, nil
 	}
+
+	for index, source := range attemptOrder {
+		switch source {
+		case BillingSourceWallet:
+			session, apiErr := tryWallet()
+			if apiErr != nil {
+				if apiErr.GetErrorCode() == types.ErrorCodeInsufficientUserQuota && index < len(attemptOrder)-1 {
+					continue
+				}
+				return nil, apiErr
+			}
+			return session, nil
+		case BillingSourceSubscription:
+			return trySubscription()
+		}
+	}
+
+	return nil, types.NewErrorWithStatusCode(
+		fmt.Errorf("当前分组没有可用扣费方式"),
+		types.ErrorCodeInvalidRequest,
+		http.StatusForbidden,
+		types.ErrOptionWithSkipRetry(),
+		types.ErrOptionWithNoRecordErrorLog(),
+	)
 }

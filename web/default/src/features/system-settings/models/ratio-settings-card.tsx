@@ -31,6 +31,7 @@ import { resetModelRatios } from '../api'
 import { SettingsPageTitleStatusPortal } from '../components/settings-page-context'
 import { SettingsSection } from '../components/settings-section'
 import { useUpdateOption } from '../hooks/use-update-option'
+import { isGroupBillingPolicy } from './group-billing-policy'
 import { GroupRatioForm } from './group-ratio-form'
 import { ModelRatioForm } from './model-ratio-form'
 import { ToolPriceSettings } from './tool-price-settings'
@@ -58,18 +59,19 @@ function formatJsonValidationError(
     )
   }
 
-  const parts = [
-    error.line && error.column
-      ? t('JSON is invalid at line {{line}}, column {{column}}.', {
-          line: error.line,
-          column: error.column,
-        })
-      : error.position !== undefined
-        ? t('JSON is invalid at position {{position}}.', {
-            position: error.position,
-          })
-        : t('JSON is invalid. Please check the syntax.'),
-  ]
+  let message = t('JSON is invalid. Please check the syntax.')
+  if (error.line && error.column) {
+    message = t('JSON is invalid at line {{line}}, column {{column}}.', {
+      line: error.line,
+      column: error.column,
+    })
+  } else if (error.position !== undefined) {
+    message = t('JSON is invalid at position {{position}}.', {
+      position: error.position,
+    })
+  }
+
+  const parts = [message]
 
   if (error.missingCommaLine) {
     parts.push(
@@ -126,6 +128,10 @@ const createGroupSchema = (t: Translate) =>
     }),
     DefaultUseAutoGroup: z.boolean(),
     GroupSpecialUsableGroup: createJsonStringField(t),
+    GroupBillingPolicy: createJsonStringField(t, {
+      predicate: isGroupBillingPolicy,
+      predicateMessage: 'Expected a JSON object of group billing source rules',
+    }),
   })
 
 type ModelFormValues = z.infer<ReturnType<typeof createModelSchema>>
@@ -197,6 +203,7 @@ export function RatioSettingsCard({
     GroupSpecialUsableGroup: normalizeJsonString(
       groupDefaults.GroupSpecialUsableGroup
     ),
+    GroupBillingPolicy: normalizeJsonString(groupDefaults.GroupBillingPolicy),
   })
   const modelSchema = useMemo(() => createModelSchema(t), [t])
   const groupSchema = useMemo(() => createGroupSchema(t), [t])
@@ -233,6 +240,9 @@ export function RatioSettingsCard({
       AutoGroups: formatJsonForTextarea(groupDefaults.AutoGroups),
       GroupSpecialUsableGroup: formatJsonForTextarea(
         groupDefaults.GroupSpecialUsableGroup
+      ),
+      GroupBillingPolicy: formatJsonForTextarea(
+        groupDefaults.GroupBillingPolicy
       ),
     },
   })
@@ -283,6 +293,7 @@ export function RatioSettingsCard({
       GroupSpecialUsableGroup: normalizeJsonString(
         groupDefaults.GroupSpecialUsableGroup
       ),
+      GroupBillingPolicy: normalizeJsonString(groupDefaults.GroupBillingPolicy),
     }
 
     groupForm.reset({
@@ -294,6 +305,9 @@ export function RatioSettingsCard({
       AutoGroups: formatJsonForTextarea(groupDefaults.AutoGroups),
       GroupSpecialUsableGroup: formatJsonForTextarea(
         groupDefaults.GroupSpecialUsableGroup
+      ),
+      GroupBillingPolicy: formatJsonForTextarea(
+        groupDefaults.GroupBillingPolicy
       ),
     })
   }, [groupDefaults, groupForm])
@@ -353,12 +367,14 @@ export function RatioSettingsCard({
         GroupSpecialUsableGroup: normalizeJsonString(
           values.GroupSpecialUsableGroup
         ),
+        GroupBillingPolicy: normalizeJsonString(values.GroupBillingPolicy),
       }
 
       // Map form field names to API keys (most are 1:1, except GroupSpecialUsableGroup)
       const apiKeyMap: Record<string, string> = {
         GroupSpecialUsableGroup:
           'group_ratio_setting.group_special_usable_group',
+        GroupBillingPolicy: 'group_billing_policy_setting.group_billing_policy',
       }
 
       const updates = (
