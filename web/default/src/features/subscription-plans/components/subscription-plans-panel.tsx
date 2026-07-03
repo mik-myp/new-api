@@ -85,6 +85,12 @@ const purchaseCardClassName =
 const purchaseBadgeClassName =
   'border border-primary/20 bg-primary/10 text-primary'
 
+const loadingSkeletonKeys = [
+  'subscription-plan-skeleton-1',
+  'subscription-plan-skeleton-2',
+  'subscription-plan-skeleton-3',
+]
+
 function getEpayMethods(payMethods: PaymentMethod[] = []): PaymentMethod[] {
   return payMethods.filter(
     (m) => m?.type && m.type !== 'stripe' && m.type !== 'creem'
@@ -106,26 +112,6 @@ function getBillingPreferenceLabel(
       return t('Wallet Only')
     default:
       return preference
-  }
-}
-
-function formatPlanPrice(amount: number, currency: string): string {
-  const normalizedCurrency = currency || 'USD'
-  if (normalizedCurrency.toUpperCase() === 'USD') {
-    const formattedAmount = new Intl.NumberFormat(undefined, {
-      maximumFractionDigits: 2,
-    }).format(amount)
-    return `$${formattedAmount}`
-  }
-
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: normalizedCurrency,
-      maximumFractionDigits: 2,
-    }).format(amount)
-  } catch {
-    return `${normalizedCurrency} ${amount.toFixed(2)}`
   }
 }
 
@@ -437,8 +423,8 @@ export function SubscriptionPlansPanel({
         <CardContent className='space-y-4 p-3 sm:p-5'>
           <Skeleton className='h-20 w-full' />
           <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'>
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className='h-48 w-full' />
+            {loadingSkeletonKeys.map((key) => (
+              <Skeleton key={key} className='h-48 w-full' />
             ))}
           </div>
         </CardContent>
@@ -615,28 +601,17 @@ export function SubscriptionPlansPanel({
                       const isCancelled = subscription?.status === 'cancelled'
                       const isActive =
                         subscription?.status === 'active' && !isExpired
-                      const usageTone =
-                        usagePercent >= 90
-                          ? '[&_[data-slot=progress-indicator]]:bg-destructive'
-                          : usagePercent >= 70
-                            ? '[&_[data-slot=progress-indicator]]:bg-amber-500'
-                            : '[&_[data-slot=progress-indicator]]:bg-emerald-500'
+                      let usageTone =
+                        '[&_[data-slot=progress-indicator]]:bg-emerald-500'
+                      if (usagePercent >= 90) {
+                        usageTone =
+                          '[&_[data-slot=progress-indicator]]:bg-destructive'
+                      } else if (usagePercent >= 70) {
+                        usageTone =
+                          '[&_[data-slot=progress-indicator]]:bg-amber-500'
+                      }
 
-                      const statusBadge = isActive ? (
-                        <StatusBadge
-                          label={t('Active')}
-                          variant='success'
-                          copyable={false}
-                          className='shrink-0'
-                        />
-                      ) : isCancelled ? (
-                        <StatusBadge
-                          label={t('Cancelled')}
-                          variant='neutral'
-                          copyable={false}
-                          className='shrink-0'
-                        />
-                      ) : (
+                      let statusBadge = (
                         <StatusBadge
                           label={t('Expired')}
                           variant='neutral'
@@ -644,6 +619,35 @@ export function SubscriptionPlansPanel({
                           className='shrink-0'
                         />
                       )
+                      if (isActive) {
+                        statusBadge = (
+                          <StatusBadge
+                            label={t('Active')}
+                            variant='success'
+                            copyable={false}
+                            className='shrink-0'
+                          />
+                        )
+                      } else if (isCancelled) {
+                        statusBadge = (
+                          <StatusBadge
+                            label={t('Cancelled')}
+                            variant='neutral'
+                            copyable={false}
+                            className='shrink-0'
+                          />
+                        )
+                      }
+
+                      let statusTimeLabel = t('Expired at')
+                      if (isActive) {
+                        statusTimeLabel = t('Until')
+                      } else if (isCancelled) {
+                        statusTimeLabel = t('Cancelled at')
+                      }
+
+                      const nextResetTime =
+                        subscription?.next_reset_time ?? 0
 
                       return (
                         <Card
@@ -679,11 +683,7 @@ export function SubscriptionPlansPanel({
                                 </span>
                               )}
                               <span className='text-muted-foreground mt-1 text-xs'>
-                                {isActive
-                                  ? t('Until')
-                                  : isCancelled
-                                    ? t('Cancelled at')
-                                    : t('Expired at')}{' '}
+                                {statusTimeLabel}{' '}
                                 {new Date(
                                   (subscription?.end_time || 0) * 1000
                                 ).toLocaleString()}
@@ -691,17 +691,16 @@ export function SubscriptionPlansPanel({
                             </div>
 
                             <div className='flex-1 space-y-2 pb-3 text-xs'>
-                              {isActive &&
-                                (subscription?.next_reset_time ?? 0) > 0 && (
-                                  <div className='text-muted-foreground flex items-center justify-between gap-3'>
-                                    <span>{t('Next reset')}</span>
-                                    <span className='text-foreground min-w-0 truncate text-right font-medium'>
-                                      {new Date(
-                                        subscription!.next_reset_time! * 1000
-                                      ).toLocaleString()}
-                                    </span>
-                                  </div>
-                                )}
+                              {isActive && nextResetTime > 0 && (
+                                <div className='text-muted-foreground flex items-center justify-between gap-3'>
+                                  <span>{t('Next reset')}</span>
+                                  <span className='text-foreground min-w-0 truncate text-right font-medium'>
+                                    {new Date(
+                                      nextResetTime * 1000
+                                    ).toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
 
                               <div className='bg-muted/35 rounded-lg border p-3'>
                                 <div className='flex items-start justify-between gap-3'>
@@ -867,10 +866,7 @@ export function SubscriptionPlansPanel({
                       const plan = p?.plan
                       if (!plan) return null
                       const totalAmount = Number(plan.total_amount || 0)
-                      const price = formatPlanPrice(
-                        Number(plan.price_amount || 0),
-                        plan.currency || 'USD'
-                      )
+                      const price = Number(plan.price_amount || 0).toFixed(2)
                       const isPopular =
                         plans.findIndex(
                           (record) => record?.plan?.id === plan.id
@@ -953,7 +949,7 @@ export function SubscriptionPlansPanel({
 
                             <div className='flex min-h-14 items-center py-2'>
                               <span className='text-primary text-2xl font-bold'>
-                                {price}
+                                ￥{price}
                               </span>
                             </div>
 

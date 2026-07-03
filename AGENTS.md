@@ -122,6 +122,12 @@ Do NOT directly import or call `encoding/json` in business code. `json.RawMessag
 - In React components, use `useTranslation()` and call `t('English key')` for user-facing text.
 - Follow `web/default/AGENTS.md` for detailed frontend conventions, including TypeScript, component structure, styling, accessibility, testing, and build checks.
 
+### Release Runbook
+
+- `docs/installation/release-runbook.md` is the canonical deployment and release runbook for this fork.
+- When changing Docker images, Docker Compose files, release workflows, deployment scripts, or operational release steps, review `docs/installation/release-runbook.md` and update it in the same change when behavior changes.
+- During official upstream syncs, preserve fork-specific deployment guidance in `docs/installation/release-runbook.md`; merge upstream documentation carefully instead of deleting or overwriting local runbook requirements.
+
 ### Project Governance
 
 **Protected project information:** The following project-related information is strictly protected and MUST NOT be modified, deleted, replaced, or removed under any circumstances:
