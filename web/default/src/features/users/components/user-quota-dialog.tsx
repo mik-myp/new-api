@@ -19,13 +19,15 @@ For commercial licensing, please contact support@quantumnous.com
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { getCurrencyDisplay, getCurrencyLabel } from '@/lib/currency'
-import { formatQuota, parseQuotaFromDollars } from '@/lib/format'
-import { cn } from '@/lib/utils'
+
+import { Dialog } from '@/components/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog } from '@/components/dialog'
+import { getCurrencyDisplay, getCurrencyLabel } from '@/lib/currency'
+import { formatQuota, parseQuotaFromDollars } from '@/lib/format'
+import { cn } from '@/lib/utils'
+
 import { adjustUserQuota, batchAdjustUserQuota } from '../api'
 import type { QuotaAdjustMode } from '../types'
 
@@ -59,7 +61,7 @@ export function UserQuotaDialog(props: UserQuotaDialogProps) {
   const isBatch = selectedUserIds.length > 0
   const isFactorMode = mode === 'multiply' || mode === 'divide'
 
-  const amountValue = parseFloat(amount) || 0
+  const amountValue = Number.parseFloat(amount) || 0
   const quotaValue = parseQuotaFromDollars(Math.abs(amountValue))
   const factorValue = amountValue
 
@@ -193,11 +195,19 @@ export function UserQuotaDialog(props: UserQuotaDialogProps) {
     props.onOpenChange(open)
   }
 
-  const placeholder = isFactorMode
-    ? t('Enter factor')
-    : tokensOnly
+  let placeholder = t('Enter factor')
+  if (!isFactorMode) {
+    placeholder = tokensOnly
       ? t('Enter amount in tokens')
       : t('Enter amount in {{currency}}', { currency: currencyLabel })
+  }
+
+  let amountStep = 0.000001
+  if (isFactorMode) {
+    amountStep = 0.1
+  } else if (tokensOnly) {
+    amountStep = 1
+  }
 
   return (
     <Dialog
@@ -255,7 +265,7 @@ export function UserQuotaDialog(props: UserQuotaDialogProps) {
           </Label>
           <Input
             type='number'
-            step={isFactorMode ? 0.1 : tokensOnly ? 1 : 0.000001}
+            step={amountStep}
             min={mode === 'override' && !isFactorMode ? undefined : 0}
             placeholder={placeholder}
             value={amount}
