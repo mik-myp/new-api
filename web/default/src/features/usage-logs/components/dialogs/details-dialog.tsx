@@ -149,6 +149,15 @@ function formatMultiplier(multiplier: number): string {
   return `${multiplier.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}x`
 }
 
+function quotaSaturationKindLabel(
+  kind: 'overflow' | 'underflow' | 'nan',
+  t: (key: string) => string
+): string {
+  if (kind === 'overflow') return t('Overflow')
+  if (kind === 'underflow') return t('Underflow')
+  return t('Invalid (NaN)')
+}
+
 function BillingBreakdown(props: {
   log: UsageLog
   other: LogOtherData
@@ -744,6 +753,41 @@ export function DetailsDialog(props: DetailsDialogProps) {
           </DetailSection>
         )}
 
+        {/* Quota saturation marker (admin only) */}
+        {props.isAdmin && other?.admin_info?.quota_saturation && (
+          <DetailSection
+            icon={<AlertTriangle className='size-3.5' aria-hidden='true' />}
+            label={t('Quota clamped')}
+            variant='danger'
+          >
+            <p className='mb-1 text-xs wrap-break-word'>
+              {t('Quota saturation protection triggered')}
+            </p>
+            <DetailRow
+              label={t('Kind')}
+              value={quotaSaturationKindLabel(
+                other.admin_info.quota_saturation.kind,
+                t
+              )}
+            />
+            <DetailRow
+              label={t('Original value')}
+              value={String(other.admin_info.quota_saturation.original)}
+              mono
+            />
+            <DetailRow
+              label={t('Clamped to')}
+              value={String(other.admin_info.quota_saturation.clamped)}
+              mono
+            />
+            <DetailRow
+              label={t('Operation')}
+              value={other.admin_info.quota_saturation.op}
+              mono
+            />
+          </DetailSection>
+        )}
+
         {/* Reject reason (admin only) */}
         {props.isAdmin && other?.reject_reason && (
           <DetailSection
@@ -814,7 +858,7 @@ export function DetailsDialog(props: DetailsDialogProps) {
                 <Info className='mt-0.5 size-3.5 shrink-0' aria-hidden='true' />
                 <span>
                   {t(
-                    'This record was written by a pre-upgrade instance and lacks audit info. Upgrade the instance to record server IP, callback IP, payment method and system version.'
+                    'This historical record predates audit-info tracking and cannot be backfilled. The current instance already records server IP, callback IP, payment method, and system version for new top-ups going forward.'
                   )}
                 </span>
               </div>
