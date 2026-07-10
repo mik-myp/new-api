@@ -289,6 +289,8 @@ xiaotubao/new-api:latest-arm64
 
 如果 GitHub Actions Repository Variable `DOCKERHUB_IMAGE` 已设置，则以上镜像名前缀以该变量为准。
 
+workflow 会使用 cosign keyless signing 对单架构镜像 digest 和多架构 manifest 进行签名，签名目标同样使用 `DOCKERHUB_IMAGE` 或默认的 `xiaotubao/new-api`。如果签名步骤失败，优先检查 GitHub Actions job 是否具有 `id-token: write` 权限，以及 Docker Hub token 是否能读取和推送目标镜像仓库。
+
 ### Docker Hub 凭据
 
 GitHub Actions 依赖以下仓库 secrets：
