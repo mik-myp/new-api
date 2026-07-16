@@ -22,6 +22,7 @@ import {
   CreditCard,
   FileText,
   FlaskConical,
+  Images,
   Key,
   LayoutDashboard,
   ListTodo,
@@ -36,7 +37,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { type SidebarData } from '@/components/layout/types'
+import type { SidebarData } from '@/components/layout/types'
 import { ROLE } from '@/lib/roles'
 
 /**
@@ -59,6 +60,12 @@ export function useSidebarData(): SidebarData {
             url: '/playground',
             icon: FlaskConical,
             iconColor: 'text-violet-500 dark:text-violet-400',
+          },
+          {
+            title: t('Image Studio'),
+            url: '/image-studio',
+            icon: Images,
+            iconColor: 'text-amber-500 dark:text-amber-400',
           },
           {
             title: t('Chat'),
