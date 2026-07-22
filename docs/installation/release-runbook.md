@@ -154,7 +154,7 @@ go test ./controller ./model
 前端改动：
 
 ```powershell
-cd web/default
+cd web
 bun run typecheck
 bun run build
 ```
@@ -162,7 +162,7 @@ bun run build
 涉及前端展示文案或翻译 key：
 
 ```powershell
-cd web/default
+cd web
 bun run i18n:sync
 ```
 
@@ -329,7 +329,7 @@ GitHub Actions 缺少 DOCKERHUB_USERNAME 或 DOCKERHUB_TOKEN，或 token 无 pus
 `bun run build` 失败：
 
 ```text
-前端构建失败，优先本地进入 web/default 复现。
+前端构建失败，优先本地进入 web 复现。
 ```
 
 镜像推送失败：
